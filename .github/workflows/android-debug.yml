@@ -1,0 +1,100 @@
+name: Android Debug APK (Auto)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.dart'
+      - 'pubspec.yaml'
+      - '.github/workflows/android-debug.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Detect Flutter app directory
+        id: detect_dir
+        shell: bash
+        run: |
+          set -e
+          APP_DIR="."
+          for d in "." "shell_app" "app" "mobile" "client"; do
+            if [ -f "$d/pubspec.yaml" ]; then APP_DIR="$d"; break; fi
+          done
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+          echo "Detected APP_DIR=$APP_DIR"
+
+      - name: Regenerate Android project (Flutter 3.27+)
+        shell: bash
+        run: |
+          set -e
+          cd "$APP_DIR"
+          rm -rf android
+          flutter create --platforms=android .
+
+      - name: Force NDK 27 (module Gradle + gradle.properties)
+        shell: bash
+        run: |
+          set -e
+          APP_KTS="$APP_DIR/android/app/build.gradle.kts"
+          APP_GROOVY="$APP_DIR/android/app/build.gradle"
+          PROPS="$APP_DIR/android/gradle.properties"
+
+          # Inject in Kotlin DSL if present
+          if [ -f "$APP_KTS" ]; then
+            if ! grep -q 'ndkVersion' "$APP_KTS"; then
+              awk ' /android \{/ {print; print "    ndkVersion = \"27.0.12077973\""; next} {print} ' "$APP_KTS" > "$APP_KTS.tmp" && mv "$APP_KTS.tmp" "$APP_KTS"
+              echo "Injected ndkVersion into build.gradle.kts"
+            else
+              echo "ndkVersion already present in build.gradle.kts"
+            fi
+          fi
+
+          # Inject in Groovy if present
+          if [ -f "$APP_GROOVY" ]; then
+            if ! grep -q 'ndkVersion' "$APP_GROOVY"; then
+              awk ' /android \{/ {print; print "    ndkVersion \'27.0.12077973\'"; next} {print} ' "$APP_GROOVY" > "$APP_GROOVY.tmp" && mv "$APP_GROOVY.tmp" "$APP_GROOVY"
+              echo "Injected ndkVersion into build.gradle (Groovy)"
+            else
+              echo "ndkVersion already present in build.gradle (Groovy)"
+            fi
+          fi
+
+          # Also set property as fallback
+          mkdir -p "$(dirname "$PROPS")"
+          touch "$PROPS"
+          if ! grep -q '^android.ndkVersion=' "$PROPS"; then
+            echo "android.ndkVersion=27.0.12077973" >> "$PROPS"
+            echo "Added android.ndkVersion to gradle.properties"
+          else
+            echo "gradle.properties already has android.ndkVersion"
+          fi
+
+      - name: Flutter pub get
+        shell: bash
+        run: |
+          cd "$APP_DIR"
+          flutter pub get
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          cd "$APP_DIR"
+          flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: ${{ env.APP_DIR }}/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
