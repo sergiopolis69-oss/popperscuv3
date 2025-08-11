@@ -54,9 +54,9 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Future<void> _openForm({Product? edit}) async {
     final nameCtrl = TextEditingController(text: edit?.name ?? '');
     final skuCtrl = TextEditingController(text: edit?.sku ?? '');
-    final costCtrl = TextEditingController(text: edit?.cost.toString() ?? '0');
-    final priceCtrl = TextEditingController(text: edit?.price.toString() ?? '0');
-    final stockCtrl = TextEditingController(text: edit?.stock.toString() ?? '0');
+    final costCtrl = TextEditingController(text: edit?.cost.toString());
+    final priceCtrl = TextEditingController(text: edit?.price.toString());
+    final stockCtrl = TextEditingController(text: edit?.stock.toString());
     final categoryCtrl = TextEditingController(text: edit?.category ?? '');
 
     await showDialog(

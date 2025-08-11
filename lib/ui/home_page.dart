@@ -5,6 +5,7 @@ import 'sales_page.dart';
 import 'sales_history_page.dart';
 import 'reports_page.dart';
 import 'top_customers_page.dart';
+import 'profit_overview_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -45,6 +46,12 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.leaderboard),
               label: const Text('Top clientes'),
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TopCustomersPage())),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.pie_chart_outline),
+              label: const Text('Utilidad % (Hoy/Sem/Mes/Año)'),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfitOverviewPage())),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(

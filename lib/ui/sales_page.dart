@@ -9,7 +9,6 @@ import '../repositories/sale_repository.dart';
 
 class SalesPage extends StatefulWidget {
   const SalesPage({super.key});
-
   @override
   State<SalesPage> createState() => _SalesPageState();
 }
@@ -24,12 +23,25 @@ class _SalesPageState extends State<SalesPage> {
   late Future<List<Product>> _productsFuture;
   late Future<List<Customer>> _customersFuture;
 
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
     _productsFuture = ProductRepository().all();
     _customersFuture = CustomerRepository().all();
+    _searchCtrl.addListener(_onSearch);
   }
+
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_onSearch);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearch(){ setState(()=> _query = _searchCtrl.text.trim().toLowerCase()); }
 
   double get _subtotal => _items.fold(0.0, (p, e) => p + e.subtotal);
   double get _costTotal => _items.fold(0.0, (p, e) => p + (e.costAtSale * e.quantity));
@@ -69,11 +81,7 @@ class _SalesPageState extends State<SalesPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.person_add_alt_1),
-                  tooltip: 'Agregar cliente rápido',
-                  onPressed: _quickAddCustomer,
-                ),
+                IconButton(icon: const Icon(Icons.person_add_alt_1), tooltip: 'Agregar cliente rápido', onPressed: _quickAddCustomer),
               ],
             ),
             const SizedBox(height: 8),
@@ -109,17 +117,27 @@ class _SalesPageState extends State<SalesPage> {
                 future: _productsFuture,
                 builder: (c, snap) {
                   final list = snap.data ?? [];
+                  final filtered = _query.isEmpty ? list : list.where((p){
+                    final n=p.name.toLowerCase(); final s=(p.sku??'').toLowerCase();
+                    return n.contains(_query) || s.contains(_query);
+                  }).toList();
                   return ListView(
                     children: [
+                      TextField(
+                        controller: _searchCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Buscar producto por nombre o SKU',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       const Text('Productos', style: TextStyle(fontWeight: FontWeight.bold)),
-                      for (final p in list)
+                      for (final p in filtered)
                         ListTile(
                           title: Text(p.name),
                           subtitle: Text('Stock: ${p.stock}  | Compra: ${p.cost.toStringAsFixed(2)}  | Venta: ${p.price.toStringAsFixed(2)}'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.add_circle),
-                            onPressed: () => _addItemDialog(p),
-                          ),
+                          trailing: IconButton(icon: const Icon(Icons.add_circle), onPressed: () => _addItemDialog(p)),
                         ),
                       const Divider(height: 24),
                       const Text('Carrito', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -152,10 +170,13 @@ class _SalesPageState extends State<SalesPage> {
               ],
             ),
             const SizedBox(height: 8),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.check),
-              label: const Text('Guardar venta'),
-              onPressed: _items.isEmpty ? null : _saveSale,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.check),
+                label: const Text('Guardar venta'),
+                onPressed: _items.isEmpty ? null : _saveSale,
+              ),
             )
           ],
         ),
@@ -181,15 +202,8 @@ class _SalesPageState extends State<SalesPage> {
           TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancelar')),
           ElevatedButton(onPressed: () async {
             final repo = CustomerRepository();
-            final nc = await repo.create(Customer(
-              id: const Uuid().v4(),
-              name: name.text.trim(),
-              phone: phone.text.trim().isEmpty ? null : phone.text.trim(),
-            ));
-            setState(() {
-              _customersFuture = CustomerRepository().all();
-              _customerId = nc.id;
-            });
+            final nc = await repo.create(Customer(id: const Uuid().v4(), name: name.text.trim(), phone: phone.text.trim().isEmpty ? null : phone.text.trim()));
+            setState(() { _customersFuture = CustomerRepository().all(); _customerId = nc.id; });
             if (mounted) Navigator.pop(c);
           }, child: const Text('Guardar')),
         ],
@@ -280,21 +294,10 @@ class _SalesPageState extends State<SalesPage> {
 
   Future<void> _saveSale() async {
     final repo = SaleRepository();
-    await repo.createSale(
-      customerId: _customerId,
-      items: _items.toList(),
-      discount: _discount,
-      paymentMethod: _paymentMethod,
-    );
-
+    await repo.createSale(customerId: _customerId, items: _items.toList(), discount: _discount, paymentMethod: _paymentMethod);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Venta guardada')));
-      setState((){
-        _items.clear();
-        _customerId = null;
-        _discount = 0;
-        _paymentMethod = 'Cash';
-      });
+      setState((){ _items.clear(); _customerId = null; _discount = 0; _paymentMethod = 'Cash'; });
     }
   }
 }

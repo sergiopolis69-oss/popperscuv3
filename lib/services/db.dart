@@ -19,12 +19,7 @@ class AppDatabase {
   Future<Database> _init() async {
     final dir = await pp.getApplicationDocumentsDirectory();
     final path = p.join(dir.path, 'popperscuv2.db');
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    return await openDatabase(path, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future _onCreate(Database db, int version) async {
@@ -91,7 +86,7 @@ class AppDatabase {
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('ALTER TABLE sale_items ADD COLUMN line_discount REAL NOT NULL DEFAULT 0;');
+      try { await db.execute('ALTER TABLE sale_items ADD COLUMN line_discount REAL NOT NULL DEFAULT 0;'); } catch (_) {}
       try { await db.execute('ALTER TABLE sale_items ADD COLUMN subtotal REAL NOT NULL DEFAULT 0;'); } catch (_) {}
       await db.execute('CREATE INDEX IF NOT EXISTS idx_sales_created_at ON sales(created_at);');
     }

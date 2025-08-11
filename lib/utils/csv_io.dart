@@ -52,10 +52,7 @@ class CsvIO {
       for (int j = 0; j < headers.length && j < r.length; j++) {
         m[headers[j]] = r[j];
       }
-      try {
-        await db.insert('products', Map<String, dynamic>.from(m));
-        count++;
-      } catch (_) {}
+      try { await db.insert('products', Map<String, dynamic>.from(m)); count++; } catch (_) {}
     }
     return count;
   }
@@ -76,10 +73,7 @@ class CsvIO {
       for (int j = 0; j < headers.length && j < r.length; j++) {
         m[headers[j]] = r[j];
       }
-      try {
-        await db.insert('customers', Map<String, dynamic>.from(m));
-        count++;
-      } catch (_) {}
+      try { await db.insert('customers', Map<String, dynamic>.from(m)); count++; } catch (_) {}
     }
     return count;
   }
