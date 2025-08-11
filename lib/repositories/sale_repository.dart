@@ -17,7 +17,7 @@ class SaleRepository {
       double subtotal = 0;
       double costTotal = 0;
       for (final it in items) {
-        subtotal += it.subtotal; // price*qty - lineDiscount
+        subtotal += it.subtotal;
         costTotal += (it.costAtSale * it.quantity);
       }
       double total = subtotal - discount;
@@ -45,11 +45,7 @@ class SaleRepository {
     });
   }
 
-  Future<List<Map<String, dynamic>>> history({
-    String? customerId,
-    DateTime? from,
-    DateTime? to,
-  }) async {
+  Future<List<Map<String, dynamic>>> history({String? customerId, DateTime? from, DateTime? to}) async {
     final db = await AppDatabase().database;
     final where = <String>[]; final args = <dynamic>[];
     if (customerId != null && customerId.isNotEmpty) { where.add('s.customer_id = ?'); args.add(customerId); }
@@ -79,5 +75,19 @@ class SaleRepository {
       LIMIT ?
     ''';
     return db.rawQuery(sql, [from.toIso8601String(), to.toIso8601String(), limit]);
+  }
+
+  Future<Map<String, double>> summary(DateTime from, DateTime to) async {
+    final db = await AppDatabase().database;
+    final res = await db.rawQuery('''
+      SELECT COALESCE(SUM(total),0) as revenue,
+             COALESCE(SUM(profit),0) as profit
+      FROM sales
+      WHERE created_at >= ? AND created_at <= ?
+    ''', [from.toIso8601String(), to.toIso8601String()]);
+    final row = res.isNotEmpty ? res.first : {'revenue': 0, 'profit': 0};
+    final rev = (row['revenue'] as num).toDouble();
+    final prof = (row['profit'] as num).toDouble();
+    return {'revenue': rev, 'profit': prof};
   }
 }

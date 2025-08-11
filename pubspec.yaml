@@ -1,7 +1,7 @@
 name: popperscuv2
-description: App base inventario/ventas/clientes (offline), utilidad por venta, CSV visibles.
+description: Inventario/ventas/clientes offline con utilidad y reportes.
 publish_to: "none"
-version: 0.3.0+3
+version: 0.6.0+6
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

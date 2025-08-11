@@ -6,7 +6,6 @@ enum Period { week, month, year }
 
 class TopCustomersPage extends StatefulWidget {
   const TopCustomersPage({super.key});
-
   @override
   State<TopCustomersPage> createState() => _TopCustomersPageState();
 }
@@ -14,6 +13,7 @@ class TopCustomersPage extends StatefulWidget {
 class _TopCustomersPageState extends State<TopCustomersPage> {
   Period _period = Period.month;
   DateTime _anchor = DateTime.now();
+  bool _loadingBtn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +49,15 @@ class _TopCustomersPageState extends State<TopCustomersPage> {
                   child: Text('Fecha: ${DateFormat('yyyy-MM-dd').format(_anchor)}'),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(onPressed: ()=> setState((){}), child: const Text('Actualizar')),
+                ElevatedButton(
+                  onPressed: _loadingBtn ? null : () async {
+                    setState(()=> _loadingBtn = true);
+                    setState((){});
+                    await Future.delayed(const Duration(milliseconds: 400));
+                    setState(()=> _loadingBtn = false);
+                  },
+                  child: _loadingBtn ? const SizedBox(width:20,height:20,child:CircularProgressIndicator(strokeWidth:2)) : const Text('Actualizar'),
+                ),
               ],
             ),
           ),
@@ -77,11 +85,7 @@ class _TopCustomersPageState extends State<TopCustomersPage> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => _FilteredHistory(
-                            customerId: r['customer_id'] as String?,
-                            from: from,
-                            to: to,
-                          ),
+                          builder: (_) => _FilteredHistory(customerId: r['customer_id'] as String?, from: from, to: to),
                         ));
                       },
                     );

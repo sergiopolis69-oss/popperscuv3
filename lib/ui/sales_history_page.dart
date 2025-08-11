@@ -6,7 +6,6 @@ import '../models/customer.dart';
 
 class SalesHistoryPage extends StatefulWidget {
   const SalesHistoryPage({super.key});
-
   @override
   State<SalesHistoryPage> createState() => _SalesHistoryPageState();
 }
@@ -15,6 +14,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
   String? _customerId;
   DateTime? _from;
   DateTime? _to;
+  bool _btnLoading = false;
 
   Future<List<Customer>> _loadCustomers() => CustomerRepository().all();
 
@@ -36,7 +36,15 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
               ],
             ),
             const SizedBox(height: 8),
-            ElevatedButton(onPressed: ()=> setState((){}), child: const Text('Buscar')),
+            ElevatedButton(
+              onPressed: _btnLoading ? null : () async {
+                setState(()=> _btnLoading = true);
+                setState((){});
+                await Future.delayed(const Duration(milliseconds: 400));
+                setState(()=> _btnLoading = false);
+              },
+              child: _btnLoading ? const SizedBox(width:20,height:20,child:CircularProgressIndicator(strokeWidth:2)) : const Text('Buscar'),
+            ),
             const Divider(height: 16),
             Expanded(child: _results()),
           ],

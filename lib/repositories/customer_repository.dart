@@ -1,10 +1,7 @@
-import 'package:uuid/uuid.dart';
 import '../services/db.dart';
 import '../models/customer.dart';
 
 class CustomerRepository {
-  final _uuid = const Uuid();
-
   Future<List<Customer>> all() async {
     final db = await AppDatabase().database;
     final rows = await db.query('customers', orderBy: 'created_at DESC');
