@@ -17,7 +17,13 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   Widget build(BuildContext context) {
     final async = ref.watch(customersProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Clientes')),
+      appBar: AppBar(
+        title: const Text('Clientes'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png')),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openForm(),
         child: const Icon(Icons.add),
