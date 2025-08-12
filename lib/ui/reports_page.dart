@@ -12,7 +12,10 @@ class _ReportsPageState extends State<ReportsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reportes / CSV')),
+      appBar: AppBar(
+        title: const Text('Reportes / CSV'),
+        leading: Padding(padding: const EdgeInsets.all(8), child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png'))),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

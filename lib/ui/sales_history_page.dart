@@ -21,7 +21,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Historial de ventas')),
+      appBar: AppBar(
+        title: const Text('Historial de ventas'),
+        leading: Padding(padding: const EdgeInsets.all(8), child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png'))),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

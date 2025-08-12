@@ -19,7 +19,10 @@ class _TopCustomersPageState extends State<TopCustomersPage> {
   Widget build(BuildContext context) {
     final (from, to) = _rangeFor(_period, _anchor);
     return Scaffold(
-      appBar: AppBar(title: const Text('Top clientes')),
+      appBar: AppBar(
+        title: const Text('Top clientes'),
+        leading: Padding(padding: const EdgeInsets.all(8), child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png'))),
+      ),
       body: Column(
         children: [
           Padding(

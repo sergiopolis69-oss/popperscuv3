@@ -17,7 +17,13 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Inventario')),
+      appBar: AppBar(
+        title: const Text('Inventario'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png')),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openForm(),
         child: const Icon(Icons.add),
@@ -57,7 +63,9 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     final costCtrl = TextEditingController(text: edit?.cost.toString());
     final priceCtrl = TextEditingController(text: edit?.price.toString());
     final stockCtrl = TextEditingController(text: edit?.stock.toString());
-    final categoryCtrl = TextEditingController(text: edit?.category ?? '');
+
+    final categories = await ref.read(productRepoProvider).categories();
+    String? selectedCategory = edit?.category;
 
     await showDialog(
       context: context,
@@ -72,7 +80,37 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
               TextField(controller: costCtrl, decoration: const InputDecoration(labelText: 'Precio compra'), keyboardType: TextInputType.number),
               TextField(controller: priceCtrl, decoration: const InputDecoration(labelText: 'Precio venta'), keyboardType: TextInputType.number),
               TextField(controller: stockCtrl, decoration: const InputDecoration(labelText: 'Stock'), keyboardType: TextInputType.number),
-              TextField(controller: categoryCtrl, decoration: const InputDecoration(labelText: 'Categoría')),
+              DropdownButtonFormField<String?>(
+                value: selectedCategory,
+                decoration: const InputDecoration(labelText: 'Categoría'),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('(sin categoría)')),
+                  ...categories.map((e)=> DropdownMenuItem<String?>(value: e, child: Text(e))).toList(),
+                  const DropdownMenuItem(value: '__new__', child: Text('+ Nueva categoría...')),
+                ],
+                onChanged: (v) async {
+                  if (v == '__new__') {
+                    final ctrl = TextEditingController();
+                    final ok = await showDialog<String?>(
+                      context: context,
+                      builder: (ctx)=> AlertDialog(
+                        title: const Text('Nueva categoría'),
+                        content: TextField(controller: ctrl, decoration: const InputDecoration(labelText: 'Nombre de categoría')),
+                        actions: [
+                          TextButton(onPressed: ()=> Navigator.pop(ctx, null), child: const Text('Cancelar')),
+                          ElevatedButton(onPressed: ()=> Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Agregar')),
+                        ],
+                      ),
+                    );
+                    if (ok != null && ok.isNotEmpty) {
+                      selectedCategory = ok;
+                      (c as Element).markNeedsBuild();
+                    }
+                  } else {
+                    selectedCategory = v;
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -88,7 +126,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                 cost: double.tryParse(costCtrl.text) ?? 0,
                 price: double.tryParse(priceCtrl.text) ?? 0,
                 stock: int.tryParse(stockCtrl.text) ?? 0,
-                category: categoryCtrl.text.trim().isEmpty ? null : categoryCtrl.text.trim(),
+                category: selectedCategory == null || selectedCategory.trim().isEmpty ? null : selectedCategory,
               );
               await repo.create(p);
             } else {
@@ -98,7 +136,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                 cost: double.tryParse(costCtrl.text) ?? edit.cost,
                 price: double.tryParse(priceCtrl.text) ?? edit.price,
                 stock: int.tryParse(stockCtrl.text) ?? edit.stock,
-                category: categoryCtrl.text.trim().isEmpty ? null : categoryCtrl.text.trim(),
+                category: selectedCategory == null || selectedCategory.trim().isEmpty ? null : selectedCategory,
                 updatedAt: DateTime.now(),
               );
               await repo.update(p);

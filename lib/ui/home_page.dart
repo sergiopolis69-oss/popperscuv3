@@ -13,7 +13,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PoppersCU v2 — Base')),
+      appBar: AppBar(
+        title: const Text('PoppersCU v2 — Base'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png')),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(

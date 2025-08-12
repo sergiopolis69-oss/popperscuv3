@@ -23,4 +23,10 @@ class ProductRepository {
     final db = await AppDatabase().database;
     await db.delete('products', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<List<String>> categories() async {
+    final db = await AppDatabase().database;
+    final rows = await db.rawQuery("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' ORDER BY category COLLATE NOCASE");
+    return rows.map((e) => (e['category'] as String)).toList();
+  }
 }

@@ -48,6 +48,7 @@ class _ProfitOverviewPageState extends State<ProfitOverviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Utilidad % (periodos)'),
+        leading: Padding(padding: const EdgeInsets.all(8), child: CircleAvatar(backgroundImage: AssetImage('assets/logo.png'))),
         actions: [
           IconButton(
             onPressed: _loading ? null : _refresh,
